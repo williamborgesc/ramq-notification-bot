@@ -1,0 +1,30 @@
+spring:
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+twitter:
+  resource:
+    tweets: https://api.twitter.com/2/tweets
+
+application:
+  notification:
+    tweet-message: RAMQ new times for reservation available at https://www.ramq.gouv.qc.ca/fr/nous-joindre/prendre-rendez-vous-telephonique
+  ramq:
+    json-regex: <script.*?id="pagedatapayload" type="text/javascript">.*?var PageDataPayload = (.+?);.*?</script>
+    service-regex: "Pays sans entente : 1re inscription"
+    bookings:
+      uri: https://outlook.office365.com/owa/calendar/RAMQ_Bureau_QC@azqmar.onmicrosoft.com/bookings/
+      service-uri: https://outlook.office365.com/owa/calendar/RAMQ_Bureau_QC@azqmar.onmicrosoft.com/bookings/service.svc/GetStaffBookability
+
+logging:
+  level:
+    com:
+      github:
+        ramq:
+          notification:
+            bot: DEBUG
