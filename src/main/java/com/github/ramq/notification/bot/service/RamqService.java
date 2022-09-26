@@ -1,22 +1,21 @@
 package com.github.ramq.notification.bot.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.ramq.notification.bot.dto.ramq.BookableTimeBlock;
 import com.github.ramq.notification.bot.dto.ramq.Bookings;
 import com.github.ramq.notification.bot.dto.ramq.BookingsRequest;
 import com.github.ramq.notification.bot.dto.ramq.RamqServiceResource;
 import com.github.ramq.notification.bot.dto.ramq.SchedulerResource;
-import com.github.ramq.notification.bot.dto.ramq.BookableTimeBlock;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +50,8 @@ public class RamqService {
         BookingsRequest bookingRequest = createBookingRequest(staffList);
         Bookings bookings = restTemplate.postForObject(serviceUri, bookingRequest, Bookings.class);
 
+        validateBookingsResponse(bookings);
+
         Set<BookableTimeBlock> bookableTimeBlocks = new HashSet<>();
         bookings.getStaffBookabilities().forEach(staffBookabilities -> {
             List<Integer> days = staffBookabilities.getBookableDays().stream()
@@ -69,6 +70,13 @@ public class RamqService {
         return bookableTimeBlocks;
     }
 
+    private void validateBookingsResponse(Bookings bookings) {
+        if (bookings == null || bookings.getStaffBookabilities() == null
+                || CollectionUtils.isEmpty(bookings.getStaffBookabilities())) {
+            throw new RuntimeException(String.format("Invalid response from serviceUri=%s, bookings=%s", serviceUri, bookings));
+        }
+    }
+
     @SneakyThrows
     private List<String> retrieveStaffList() {
         log.debug("Begin retrieveStaffList");
@@ -82,7 +90,7 @@ public class RamqService {
                 .filter(service -> service.getName().contains(serviceRegex))
                 .findFirst()
                 .map(RamqServiceResource::getStaffList)
-                .orElseThrow(() -> new RuntimeException(String.format("Service with name containing '%s' not found with jsonPayload: %s", serviceRegex, payload)));
+                .orElseThrow(() -> new RuntimeException(String.format("Service with name containing '%s' not found in jsonPayload: %s", serviceRegex, payload)));
     }
 
     private BookingsRequest createBookingRequest(List<String> staffList) {
@@ -90,20 +98,19 @@ public class RamqService {
         BookingsRequest bookingsRequest = new BookingsRequest();
         bookingsRequest.setStaffList(staffList);
 
-        //TODO set values dynamically
-        bookingsRequest.setStart("2022-08-31T00:00:00");
-        bookingsRequest.setEnd("2022-10-02T00:00:00");
-        bookingsRequest.setTimeZone("America/Toronto");
+        LocalDateTime today = getReferenceDate().truncatedTo(ChronoUnit.DAYS);
+        bookingsRequest.setStart(today);
+        bookingsRequest.setEnd(today.plusMonths(1).withDayOfMonth(1));
 
+        bookingsRequest.setTimeZone("America/Toronto");
         return bookingsRequest;
     }
 
-    private String extractJsonFromHtml() throws IOException {
+    private String extractJsonFromHtml() {
         log.debug("Begin extractJsonFromHtml");
-        URL url = new URL(bookingsUri);
 
         log.debug("Get content from url={}", bookingsUri);
-        String pagePayload = IOUtils.toString(url, StandardCharsets.ISO_8859_1);
+        String pagePayload = restTemplate.getForObject(bookingsUri, String.class);
 
         return extractScriptPayload(pagePayload);
     }
@@ -117,5 +124,9 @@ public class RamqService {
             return matcher.group(1);
         }
         throw new RuntimeException("Error parsing HTML from RAMQ page: " + bookingsUri);
+    }
+
+    protected LocalDateTime getReferenceDate() {
+        return LocalDateTime.now();
     }
 }
