@@ -82,7 +82,7 @@ public class RamqService {
         log.debug("Begin retrieveStaffList");
 
         String payload = extractJsonFromHtml();
-        log.debug("Payload retrieved: {}", payload);
+        log.trace("Payload retrieved: {}", payload);
 
         SchedulerResource resource = objectMapper.readValue(payload, SchedulerResource.class);
 
@@ -116,13 +116,14 @@ public class RamqService {
     }
 
     private String extractScriptPayload(final String string) {
-        log.debug("Begin extractScriptPayload with string={}", string);
+        log.debug("Begin extractScriptPayload");
 
         Pattern pattern = Pattern.compile(jsonRegex, Pattern.DOTALL);
         final Matcher matcher = pattern.matcher(string);
         if (matcher.find()) {
             return matcher.group(1);
         }
+        log.warn("Tried to process string={}", string);
         throw new RuntimeException("Error parsing HTML from RAMQ page: " + bookingsUri);
     }
 
