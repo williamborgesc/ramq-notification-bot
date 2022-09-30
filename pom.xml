@@ -8,8 +8,8 @@
         <version>2.3.4.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.williamborgesc</groupId>
-    <artifactId>rest-example-app</artifactId>
+    <groupId>com.github.williamborgesc</groupId>
+    <artifactId>ramq-notification.bot</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>rest-example-app</name>
     <description>Demo project for Spring Boot</description>
@@ -109,6 +109,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.heroku.sdk</groupId>
+                <artifactId>heroku-maven-plugin</artifactId>
+                <version>3.0.3</version>
+                <configuration>
+                    <appName>ramq-notification</appName>
+                </configuration>
             </plugin>
         </plugins>
     </build>
