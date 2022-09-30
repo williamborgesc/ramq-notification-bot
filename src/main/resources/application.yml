@@ -4,7 +4,7 @@ twitter:
 
 application:
   notification:
-    tweet-message: RAMQ new times for reservation available at https://www.ramq.gouv.qc.ca/fr/nous-joindre/prendre-rendez-vous-telephonique
+    tweet-message: "Pays sans entente: 1re inscription, retour au Québec - Nouvelles plages de rendez-vous sont disponibles : https://www.ramq.gouv.qc.ca/fr/nous-joindre/prendre-rendez-vous-telephonique"
   ramq:
     json-regex: <script.*?id="pagedatapayload" type="text/javascript">.*?var PageDataPayload = (.+?);.*?</script>
     service-regex: "Pays sans entente : 1re inscription"
